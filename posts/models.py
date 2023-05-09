@@ -19,7 +19,7 @@ class Tweet(models.Model):
 
 
 class Reply(models.Model):
-    tweet = models.ForeignKey(Tweet, on_delete=models.CASCADE)
+    tweet = models.ForeignKey(Tweet, on_delete=models.CASCADE, related_name='replies')
     text = models.CharField(max_length=140)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
