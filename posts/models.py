@@ -27,3 +27,23 @@ class Reply(models.Model):
 
     def __str__(self):
         return self.text
+
+
+class ReactionType(models.Model):
+    id = models.SmallIntegerField(primary_key=True)
+    name = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.name
+
+
+class Reaction(models.Model):
+    tweet = models.ForeignKey(Tweet, on_delete=models.CASCADE)
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
+    reaction = models.ForeignKey(ReactionType, on_delete=models.SET_DEFAULT, default=1)
+
+    def __str__(self):
+        return f'{self.tweet} - {self.profile} - {self.reaction}'
+
+    class Meta:
+        unique_together = ['tweet', 'profile']
