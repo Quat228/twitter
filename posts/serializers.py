@@ -19,6 +19,12 @@ class ReplySerializer(serializers.ModelSerializer):
         read_only_fields = ['profile', 'tweet']
 
 
+class ReactionTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.ReactionType
+        fields = "__all__"
+
+
 class ReactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Reaction
@@ -29,16 +35,15 @@ class ReactionSerializer(serializers.ModelSerializer):
         try:
             return super().create(validated_data)
         except IntegrityError:
-            print(validated_data)
-            new_reaction_type = validated_data.pop('reaction')
-            print(new_reaction_type)
+            new_reaction_type = validated_data.pop('type')
             instance = self.Meta.model.objects.get(**validated_data)
-            instance.reaction = new_reaction_type
+            instance.type = new_reaction_type
             instance.save()
             return instance
 
 
-class ReactionTypeSerializer(serializers.ModelSerializer):
+class ReplyReactionSerializer(ReactionSerializer):
     class Meta:
-        model = models.ReactionType
-        fields = "__all__"
+        model = models.ReplyReaction
+        fields = '__all__'
+        read_only_fields = ['profile', 'reply', 'tweet']

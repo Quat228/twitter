@@ -1,3 +1,6 @@
+from django.utils import timezone
+from django.core.exceptions import ObjectDoesNotExist
+
 from rest_framework import viewsets
 from rest_framework import generics
 from rest_framework import permissions as p
@@ -20,6 +23,15 @@ class TweetViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(profile=self.request.user.profile)
+
+    @action(methods=['GET'], detail=False,
+            serializer_class=serializers.TweetSerializer,
+            permission_classes=[p.IsAuthenticated]
+            )
+    def recent_5(self, request, pk=None):
+        serializer = self.serializer_class(
+            self.get_queryset().filter(created_at__gte=timezone.now()-timezone.timedelta(days=5)), many=True)
+        return Response(serializer.data, status=200)
 
     @action(methods=['POST'], detail=True,
             serializer_class=serializers.ReactionSerializer,
@@ -88,5 +100,20 @@ class ReactionCreateAPIView(generics.CreateAPIView):
             tweet_id=self.kwargs['tweet_id']
         )
 
+
+class ReplyReactionCreateAPIView(generics.CreateAPIView):
+    queryset = models.ReplyReaction.objects.all()
+    serializer_class = serializers.ReplyReactionSerializer
+    permission_classes = [p.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        try:
+            serializer.save(
+                profile=self.request.user.profile,
+                reply_id=self.kwargs['reply_id'],
+                tweet_id=self.kwargs['tweet_id']
+            )
+        except ObjectDoesNotExist:
+            return Response('Not found.', status=404)
 
 
