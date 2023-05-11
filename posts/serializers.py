@@ -46,4 +46,4 @@ class ReplyReactionSerializer(ReactionSerializer):
     class Meta:
         model = models.ReplyReaction
         fields = '__all__'
-        read_only_fields = ['profile', 'reply', 'tweet']
+        read_only_fields = ['profile', 'reply']

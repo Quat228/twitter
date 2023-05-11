@@ -107,13 +107,7 @@ class ReplyReactionCreateAPIView(generics.CreateAPIView):
     permission_classes = [p.IsAuthenticated]
 
     def perform_create(self, serializer):
-        try:
-            serializer.save(
-                profile=self.request.user.profile,
-                reply_id=self.kwargs['reply_id'],
-                tweet_id=self.kwargs['tweet_id']
-            )
-        except ObjectDoesNotExist:
-            return Response('Not found.', status=404)
-
-
+        serializer.save(
+            profile=self.request.user.profile,
+            reply=get_object_or_404(models.Reply, pk=self.kwargs['reply_id'])
+        )

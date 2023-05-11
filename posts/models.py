@@ -14,6 +14,16 @@ class Tweet(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     profile = models.ForeignKey(Profile, on_delete=models.PROTECT)
 
+    def get_reactions(self):
+        reactions = self.reactions.all()
+        result = {}
+        for reaction in reactions:
+            if reaction.get(reaction.type.name):
+                result[reaction.type.name] += 1
+            else:
+                result[reaction.type.name] = 1
+        return result
+
     def __str__(self):
         return self.text
 
@@ -50,7 +60,6 @@ class Reaction(models.Model):
 
 
 class ReplyReaction(models.Model):
-    tweet = models.ForeignKey(Tweet, on_delete=models.CASCADE)
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE)
     type = models.ForeignKey(ReactionType, on_delete=models.SET_DEFAULT, default=1)
     reply = models.ForeignKey(Reply, on_delete=models.CASCADE, related_name='reply_reactions')
@@ -59,4 +68,4 @@ class ReplyReaction(models.Model):
         return f'{self.reply} - {self.profile} - {self.type}'
 
     class Meta:
-        unique_together = ['reply', 'profile', 'tweet']
+        unique_together = ['reply', 'profile']
