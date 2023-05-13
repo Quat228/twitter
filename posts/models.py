@@ -14,11 +14,20 @@ class Tweet(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     profile = models.ForeignKey(Profile, on_delete=models.PROTECT)
 
+    def all_reactions(self):
+        result = {}
+        for r_type in ReactionType.objects.all():
+            result[r_type.name] = 0
+        del result['No reaction']
+        for reaction in self.reactions.all():
+            result[reaction.type.name] += 1
+        return result
+
     def get_reactions(self):
         reactions = self.reactions.all()
         result = {}
         for reaction in reactions:
-            if reaction.get(reaction.type.name):
+            if result.get(reaction.type.name):
                 result[reaction.type.name] += 1
             else:
                 result[reaction.type.name] = 1
@@ -34,6 +43,17 @@ class Reply(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     profile = models.ForeignKey(Profile, on_delete=models.PROTECT)
+
+    def get_reactions(self):
+        reactions = self.reply_reactions.all()
+        result = {}
+        print(result)
+        for r_type in ReactionType.objects.all():
+            result[r_type.name] = 0
+        del result['No reaction']
+        for reaction in reactions:
+            result[reaction.type.name] += 1
+        return result
 
     def __str__(self):
         return self.text

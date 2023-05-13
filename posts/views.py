@@ -7,10 +7,13 @@ from rest_framework import permissions as p
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework import filters
+from rest_framework.pagination import LimitOffsetPagination
 
 from . import models
 from . import serializers
 from . import permissions
+from . import paginations
 
 # p - REST permissions
 # permission - Custom permissions
@@ -19,7 +22,12 @@ from . import permissions
 class TweetViewSet(viewsets.ModelViewSet):
     queryset = models.Tweet.objects.all()
     serializer_class = serializers.TweetSerializer
-    permission_classes = [permissions.IsAuthorOrIsAuthenticated]
+    permission_classes = [permissions.IsAuthorOrIsAuthenticated, ]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    # pagination_class = paginations.TweetNumberPagination
+    pagination_class = LimitOffsetPagination
+    search_fields = ['text', 'profile__user__username']
+    ordering_fields = ['updated_at', 'profile__user_id']
 
     def perform_create(self, serializer):
         serializer.save(profile=self.request.user.profile)
@@ -48,18 +56,18 @@ class TweetViewSet(viewsets.ModelViewSet):
         return Response(serializer.errors, status=400)
 
 
-class ReplyViewSet(viewsets.ModelViewSet):
-    queryset = models.Reply.objects.all()
-    serializer_class = serializers.ReplySerializer
-    permission_classes = [permissions.IsAuthorOrIsAuthenticated]
-
-    def get_queryset(self):
-        return super().get_queryset().filter(tweet_id=self.kwargs['tweet_id'])
-
-    def perform_create(self, serializer):
-        tweet_id = self.kwargs['tweet_id']
-        tweet = models.Tweet.objects.get(id=tweet_id)
-        serializer.save(tweet=tweet)
+# class ReplyViewSet(viewsets.ModelViewSet):
+#     queryset = models.Reply.objects.all()
+#     serializer_class = serializers.ReplySerializer
+#     permission_classes = [permissions.IsAuthorOrIsAuthenticated]
+#
+#     def get_queryset(self):
+#         return super().get_queryset().filter(tweet_id=self.kwargs['tweet_id'])
+#
+#     def perform_create(self, serializer):
+#         tweet_id = self.kwargs['tweet_id']
+#         tweet = models.Tweet.objects.get(id=tweet_id)
+#         serializer.save(tweet=tweet)
 
 
 class ReplyRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
@@ -75,6 +83,10 @@ class ReplyListCreateAPIView(generics.ListCreateAPIView):
     queryset = models.Reply.objects.all()
     serializer_class = serializers.ReplySerializer
     permission_classes = [permissions.IsAuthorOrIsAuthenticated]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['text']
+    ordering_fields = ['updated_at']
+    pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
         return super().get_queryset().filter(tweet_id=self.kwargs['tweet_id'])
