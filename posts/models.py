@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib import admin
 
 from accounts.models import Profile
 
@@ -13,6 +14,10 @@ class Tweet(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     profile = models.ForeignKey(Profile, on_delete=models.PROTECT)
+
+    class Meta:
+        verbose_name = 'Твит'
+        verbose_name_plural = 'Твиты'
 
     def all_reactions(self):
         result = {}
@@ -33,6 +38,11 @@ class Tweet(models.Model):
                 result[reaction.type.name] = 1
         return result
 
+    @admin.display(description='Reactions')
+    def get_reactions_str(self):
+        reactions = self.get_reactions()
+        return str(reactions)
+
     def __str__(self):
         return self.text
 
@@ -47,13 +57,16 @@ class Reply(models.Model):
     def get_reactions(self):
         reactions = self.reply_reactions.all()
         result = {}
-        print(result)
         for r_type in ReactionType.objects.all():
             result[r_type.name] = 0
         del result['No reaction']
         for reaction in reactions:
             result[reaction.type.name] += 1
         return result
+
+    @admin.display(description='reactions')
+    def get_reactions_str(self):
+        return str(self.get_reactions())
 
     def __str__(self):
         return self.text
@@ -89,3 +102,12 @@ class ReplyReaction(models.Model):
 
     class Meta:
         unique_together = ['reply', 'profile']
+
+
+def tweet_multiple_image_store(instance, filename):
+    return f"profile/{instance.tweet.profile.user.username}/{instance.tweet.id}/{filename}"
+
+
+class TweetImages(models.Model):
+    tweet = models.ForeignKey(Tweet, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to=tweet_multiple_image_store)
